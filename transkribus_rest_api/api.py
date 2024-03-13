@@ -79,7 +79,7 @@ class TranskribusRestApi:
                 )
                 r.raise_for_status()
 
-                doc = parse_xml(r.text)
+                doc = parse_xml(r.content)
                 now = datetime.now()
                 self.session_id = doc.xpath("//sessionId/text()")[0]
                 self.expires = now + timedelta(hours=12)
@@ -117,7 +117,7 @@ class TranskribusRestApi:
             )
             r.raise_for_status()
             now = datetime.now()
-            doc = parse_xml(r.text)
+            doc = parse_xml(r.content)
             return cls(
                 session_id=doc.xpath("//sessionId/text()")[0],
                 expires=now + timedelta(hours=12),
@@ -180,7 +180,7 @@ class TranskribusRestApi:
         )
 
         r.raise_for_status()
-        doc = parse_xml(r.text)
+        doc = parse_xml(r.content)
         upload_id = doc.xpath("//uploadId/text()")[0]
         for page in pages:
             files = {
