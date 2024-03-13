@@ -137,6 +137,37 @@ class TranskribusRestApi:
         """
         return self.session_id.logout()
 
+    def get_collections_list(
+        self,
+        index: int = 0,
+        n_values: int = 0,
+        sort_column: str | None = None,
+        sort_direction: str | None = None,
+        empty: bool = False,
+    ) -> Dict:
+        """Get a list of collections.
+
+        Args:
+         * index: default 0
+         * nValues: default 0
+         * sort_column
+         * sort_direction
+         * empty: default False
+        """
+        r = requests.get(
+            f"{self.BASE_URL}/collections/list",
+            headers=self.session_id.get_auth_header(),
+            params={
+                "index": index,
+                "nValues": n_values,
+                "sortColumn": sort_column,
+                "sortDirection": sort_direction,
+                "empty": empty,
+            },
+        )
+        r.raise_for_status()
+        return r.json()
+
     def upload_document(
         self,
         collection_id: str,
