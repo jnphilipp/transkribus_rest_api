@@ -43,10 +43,11 @@ class UploadPage:
         page_xml_md5: str | None = None,
     ) -> None:
         """Init."""
-        self.__setattr__("image", image)
-        self.__setattr__("page_xml", page_xml)
-        self.__setattr__("page_nr", page_nr)
-        self.__setattr__(
+        object.__setattr__(self, "image", image)
+        object.__setattr__(self, "page_xml", page_xml)
+        object.__setattr__(self, "page_nr", page_nr)
+        object.__setattr__(
+            self,
             "image_md5",
             (
                 hashlib.md5(open(self.image, "rb").read()).hexdigest()
@@ -54,7 +55,8 @@ class UploadPage:
                 else image_md5
             ),
         )
-        self.__setattr__(
+        object.__setattr__(
+            self,
             "page_xml_md5",
             (
                 (
@@ -62,7 +64,7 @@ class UploadPage:
                     if self.page_xml is not None
                     else None
                 )
-                if self.page_xml_md5 is None
-                else self.page_xml_md5
+                if page_xml_md5 is None
+                else page_xml_md5
             ),
         )
