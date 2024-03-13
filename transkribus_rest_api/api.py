@@ -168,6 +168,20 @@ class TranskribusRestApi:
         r.raise_for_status()
         return r.json()
 
+    def get_doc_metadata(self, collection_id: int, document_id: int) -> Dict:
+        """Get the metadata of a document.
+
+        Args:
+         * collection_id: collection ID
+         * document_id: document ID
+        """
+        r = requests.get(
+            f"{self.BASE_URL}/collections/{collection_id}/{document_id}/metadata",
+            headers=self.session_id.get_auth_header(),
+        )
+        r.raise_for_status()
+        return r.json()
+
     def upload_document(
         self,
         collection_id: str,
