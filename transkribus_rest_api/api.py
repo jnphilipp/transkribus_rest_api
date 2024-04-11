@@ -391,6 +391,46 @@ class TranskribusRestApi:
         for page in pages:
             self.uploads.upload_page(upload_id, page.image, page.page_xml)
 
+    def download_document(
+        self,
+        collection_id: int,
+        document_id: int,
+        target: str | Path,
+    ) -> None:
+        """Download a whole document as PAGE-XML.
+
+        Args:
+         * collection_id: collection ID
+         * document_id: document ID
+         * target: target folder to save to
+        """
+        if isinstance(target, str):
+            target = Path(target)
+        mets = self.collections.get_mets(collection_id, document_id)
+        with open(target / "mets.xml", "wb", encoding="utf8") as f:
+            f.write(
+                etree.tostring(
+                    mets, encoding="utf8", xml_declaration=True, pretty_print=True
+                )
+            )
+
+        for page in self.collections.get_pages_from_pages_str(
+            collection_id, document_id
+        ):
+            doc = self.collections.get_transcript(
+                collection_id, document_id, page["pageNr"]
+            )
+            with open(
+                target / "page" / page["tsList"]["transcripts"][0]["fileName"],
+                "wb",
+                encoding="utf8",
+            ) as f:
+                f.write(
+                    etree.tostring(
+                        doc, encoding="utf8", xml_declaration=True, pretty_print=True
+                    )
+                )
+
 
 @contextmanager
 def transkribus_rest_api(username: str, password: str) -> Generator:
