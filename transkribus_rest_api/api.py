@@ -436,29 +436,31 @@ class TranskribusRestApi:
         if isinstance(target, str):
             target = Path(target)
         mets = self.collections.get_mets(collection_id, document_id)
-        with open(target / "mets.xml", "wb", encoding="utf8") as f:
-            f.write(
-                etree.tostring(
-                    mets, encoding="utf8", xml_declaration=True, pretty_print=True
-                )
+        pages = self.collections.get_pages_from_pages_str(collection_id, document_id)
+        for i, e in enumerate(
+            mets.xpath(
+                '//ns3:fileGrp[@ID="PAGEXML"]//ns3:FLocat',
+                namespaces={
+                    "ns2": "http://www.w3.org/1999/xlink",
+                    "ns3": "http://www.loc.gov/METS/",
+                },
             )
-
-        for page in self.collections.get_pages_from_pages_str(
-            collection_id, document_id
         ):
+            e.attrib["LOCTYPE"] = "OTHER"
+            e.attrib["OTHERLOCTYPE"] = "FILE"
+            e.attrib["{http://www.w3.org/1999/xlink}href"] = pages[1]["tsList"][
+                "transcripts"
+            ][0]["fileName"]
+
+        with open(target / "mets.xml", "wb") as f:
+            f.write(etree.tostring(mets, xml_declaration=True, pretty_print=True))
+
+        for page in pages:
             doc = self.collections.get_transcript(
                 collection_id, document_id, page["pageNr"]
             )
-            with open(
-                target / "page" / page["tsList"]["transcripts"][0]["fileName"],
-                "wb",
-                encoding="utf8",
-            ) as f:
-                f.write(
-                    etree.tostring(
-                        doc, encoding="utf8", xml_declaration=True, pretty_print=True
-                    )
-                )
+            with open(target / page["tsList"]["transcripts"][0]["fileName"], "wb") as f:
+                f.write(etree.tostring(doc, xml_declaration=True, pretty_print=True))
 
 
 @contextmanager
