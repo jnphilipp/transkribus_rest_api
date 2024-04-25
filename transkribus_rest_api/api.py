@@ -234,6 +234,35 @@ class TranskribusRestApi:
                 },
             ).json()
 
+        def list_docs_by_collection_id(
+            self,
+            collection_id: int,
+            index: int = 0,
+            n_values: int = 0,
+            sort_column: str | None = None,
+            sort_direction: str | None = None,
+            is_deleted: bool = False,
+        ):
+            """Get a list of documents in a collection.
+
+            Args:
+             * index: default 0
+             * nValues: default 0
+             * sort_column
+             * sort_direction
+             * is_deleted: default False
+            """
+            return self.api._get(
+                f"collections/{collection_id}/list",
+                params={
+                    "index": index,
+                    "nValues": n_values,
+                    "sortColumn": sort_column,
+                    "sortDirection": sort_direction,
+                    "isDeleted": is_deleted,
+                },
+            ).json()
+
     class Uploads:
         """Group all uploads requests together."""
 
