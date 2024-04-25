@@ -320,7 +320,7 @@ class TranskribusRestApi:
         data: dict = {},
         json: dict = {},
     ) -> requests.models.Response:
-        r = requests.get(
+        r = requests.post(
             f"{self.BASE_URL}/{path}",
             headers=self.session_id.get_auth_header(),
             params=params,
