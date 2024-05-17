@@ -449,10 +449,11 @@ class TranskribusRestApi:
         ):
             e.attrib["LOCTYPE"] = "OTHER"
             e.attrib["OTHERLOCTYPE"] = "FILE"
-            e.attrib["{http://www.w3.org/1999/xlink}href"] = pages[1]["tsList"][
+            e.attrib["{http://www.w3.org/1999/xlink}href"] = pages[i]["tsList"][
                 "transcripts"
             ][0]["fileName"]
 
+        etree.indent(mets, space=" " * 4)
         with open(target / "mets.xml", "wb") as f:
             f.write(etree.tostring(mets, xml_declaration=True, pretty_print=True))
 
@@ -460,8 +461,17 @@ class TranskribusRestApi:
             doc = self.collections.get_transcript(
                 collection_id, document_id, page["pageNr"]
             )
+            etree.indent(doc, space=" " * 4)
             with open(target / page["tsList"]["transcripts"][0]["fileName"], "wb") as f:
-                f.write(etree.tostring(doc, xml_declaration=True, pretty_print=True))
+                f.write(
+                    etree.tostring(
+                        doc,
+                        encoding="utf-8",
+                        xml_declaration=True,
+                        pretty_print=True,
+                        standalone=True,
+                    )
+                )
 
 
 @contextmanager
