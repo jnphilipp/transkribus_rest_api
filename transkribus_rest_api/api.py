@@ -384,7 +384,7 @@ class TranskribusRestApi:
         title: str,
         pages: list[UploadPage],
         metadata: dict = {},
-    ):
+    ) -> int:
         """Upload a document.
 
         Args:
@@ -419,6 +419,7 @@ class TranskribusRestApi:
 
         for page in pages:
             self.uploads.upload_page(upload_id, page.image, page.page_xml)
+        return int(doc.xpath("//docId/text()")[0])
 
     def download_document(
         self,
