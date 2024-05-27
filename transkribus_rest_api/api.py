@@ -263,6 +263,71 @@ class TranskribusRestApi:
                 },
             ).json()
 
+    class Job:
+        """Group all job requests together."""
+
+        def __init__(self, api: "TranskribusRestApi"):
+            """Create a new job.
+
+            Args:
+             * api: transkribus rest api
+            """
+            self.api = api
+
+        def get_jobs(
+            self,
+            user_id: int | None = None,
+            filter_by_user: bool | None = None,
+            status: str | None = None,
+            collection_id: int | None = None,
+            job_id: int | None = None,
+            type: str | None = None,
+            job_impl: str | None = None,
+            index: int = 0,
+            n_values: int = 50,
+            sort_column: str | None = None,
+            sort_direction: str | None = None,
+        ):
+            """List jobs.
+
+            Args:
+             * user_id
+             * filter_by_user
+             * status
+             * collection_id
+             * job_id
+             * type
+             * job_impl
+             * index: default 0
+             * n_values: default 50
+             * sort_column
+             * sort_direction
+            """
+            return self.api._get(
+                "jobs/list",
+                params={
+                    "userid": user_id,
+                    "filterByUser": filter_by_user,
+                    "status": status,
+                    "collId": collection_id,
+                    "id": job_id,
+                    "type": type,
+                    "jobImpl": job_impl,
+                    "index": index,
+                    "nValues": n_values,
+                    "sortColumn": sort_column,
+                    "sortDirection": sort_direction,
+                },
+            ).json()
+
+        def get_job_by_id(self, job_id: int | str) -> dict:
+            """Get a job by ID.
+
+            Args:
+             * job_id: job ID
+            """
+            return self.api._get(f"jobs/{job_id}").json()
+
     class Uploads:
         """Group all uploads requests together."""
 
@@ -304,6 +369,14 @@ class TranskribusRestApi:
                 ).content
             )
 
+        def get_status(self, upload_id: int) -> dict:
+            """Get status.
+
+            Args:
+             * upload_id
+            """
+            return self.api._get(f"uploads/{upload_id}").json()
+
         def upload_page(
             self,
             upload_id: int,
@@ -330,6 +403,7 @@ class TranskribusRestApi:
     def __init__(self, username: str, password: str):
         """Init."""
         self.collections = TranskribusRestApi.Collections(self)
+        self.job = TranskribusRestApi.Job(self)
         self.session_id = TranskribusRestApi.SessionId.login(username, password)
         self.uploads = TranskribusRestApi.Uploads(self)
 
@@ -419,7 +493,8 @@ class TranskribusRestApi:
 
         for page in pages:
             self.uploads.upload_page(upload_id, page.image, page.page_xml)
-        return int(doc.xpath("//docId/text()")[0])
+        job_id = self.uploads.get_status(upload_id)["jobId"]
+        return self.job.get_job_by_id(job_id)["docId"]
 
     def download_document(
         self,
