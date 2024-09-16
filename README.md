@@ -3,9 +3,9 @@
 ![Tests](https://github.com/jnphilipp/transkribus_rest_api/actions/workflows/tests.yml/badge.svg)
 [![pypi Version](https://img.shields.io/pypi/v/transkribus_rest_api.svg?logo=pypi&logoColor=white)](https://pypi.org/project/transkribus_rest_api/)
 
-## Usage
+Python bindings for the [Transkribus REST API](https://readcoop.eu/transkribus/docu/rest-api/).
 
-### with ContextManager
+## Usage
 
 ```python
 from transkribus_rest_api import transkribus_rest_api
