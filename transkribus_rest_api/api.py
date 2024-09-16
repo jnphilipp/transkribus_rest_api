@@ -136,6 +136,19 @@ class TranskribusRestApi:
             """
             self.api = api
 
+        def delete_document(
+            self, collection_id: int, document_id: int, delete: bool = False
+        ) -> None:
+            """Delete a document.
+
+            Args:
+             * collection_id: collection ID
+             * document_id: document ID
+            """
+            self.api._delete(
+                f"collections/{collection_id}/{document_id}", params={"delete": delete}
+            )
+
         def get_doc_md_by_id(self, collection_id: int, document_id: int) -> dict:
             """Get the metadata of a document.
 
@@ -406,6 +419,15 @@ class TranskribusRestApi:
         self.job = TranskribusRestApi.Job(self)
         self.session_id = TranskribusRestApi.SessionId.login(username, password)
         self.uploads = TranskribusRestApi.Uploads(self)
+
+    def _delete(self, path: str, params: dict = {}) -> requests.models.Response:
+        r = requests.delete(
+            f"{self.BASE_URL}/{path}",
+            headers=self.session_id.get_auth_header(),
+            params=params,
+        )
+        r.raise_for_status()
+        return r
 
     def _get(self, path: str, params: dict = {}) -> requests.models.Response:
         r = requests.get(
