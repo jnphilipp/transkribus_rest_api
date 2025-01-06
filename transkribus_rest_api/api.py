@@ -198,18 +198,18 @@ class TranskribusRestApi:
             ).json()
 
         def get_transcript(
-            self, collection_id: int, document_id: int, page_id: int
+            self, collection_id: int, document_id: int, page_nr: int
         ) -> etree._Element:
             """Get transcript of a page.
 
             Args:
              * collection_id: collection ID
              * document_id: document ID
-             * page_id: page ID
+             * page_nr: page number
             """
             return parse_xml(
                 self.api._get(
-                    f"collections/{collection_id}/{document_id}/{page_id}/text"
+                    f"collections/{collection_id}/{document_id}/{page_nr}/text"
                 ).content
             )
 
