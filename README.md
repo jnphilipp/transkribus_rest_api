@@ -12,10 +12,12 @@ from transkribus_rest_api import transkribus_rest_api
 from transkribus_rest_api.types import UploadPage
 
 with transkribus_rest_api(USERNAME, PASSWORD) as api:
-    api.upload_document(COLLECTION_ID,
-    "Test title",
-    pages=[
-        UploadPage(image=IMAGE_PATH, page_xml=PAGE_XML_PATH, page_nr=1)
-        UploadPage(image=IMAGE_PATH, page_xml=PAGE_XML_PATH, page_nr=2)
-    ],
+    api.upload_document(
+        COLLECTION_ID,
+       "Test title",
+        pages=[
+            UploadPage(image=IMAGE_PATH, page_xml=PAGE_XML_PATH, page_nr=1)
+            UploadPage(image=IMAGE_PATH, page_xml=PAGE_XML_PATH, page_nr=2)
+        ],
+    )
 ```
