@@ -21,7 +21,9 @@
 from lxml import etree
 
 
-def parse_xml(text: bytes) -> etree._Element:
+def parse_xml(text: bytes | str) -> etree._Element:
     """Parse string to XML."""
+    if isinstance(text, str):
+        text = text.encode("utf8")
     parser = etree.XMLParser(ns_clean=True, remove_blank_text=True)
     return etree.fromstring(text, parser=parser)

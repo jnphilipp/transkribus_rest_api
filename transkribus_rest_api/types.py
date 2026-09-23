@@ -22,6 +22,11 @@ import hashlib
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypeAlias
+
+JsonType: TypeAlias = (
+    None | bool | int | float | str | list[JsonType] | dict[str, JsonType]
+)
 
 
 @dataclass(frozen=True)

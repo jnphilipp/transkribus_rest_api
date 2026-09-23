@@ -27,7 +27,7 @@ from lxml import etree
 from pathlib import Path
 from typing import Final, Generator, TypeVar
 
-from .types import UploadPage
+from .types import JsonType, UploadPage
 from .utils import parse_xml
 
 
@@ -149,16 +149,14 @@ class TranskribusRestApi:
                 f"collections/{collection_id}/{document_id}", params={"delete": delete}
             )
 
-        def get_doc_md_by_id(self, collection_id: int, document_id: int) -> dict:
+        def get_doc_md_by_id(self, collection_id: int, document_id: int) -> JsonType:
             """Get the metadata of a document.
 
             Args:
              * collection_id: collection ID
              * document_id: document ID
             """
-            return self.api._get(
-                f"collections/{collection_id}/{document_id}/metadata"
-            ).json()
+            return self.api._get(f"collections/{collection_id}/{document_id}/metadata")
 
         def get_mets(self, collection_id: int, document_id: int) -> etree._Element:
             """Get mets file for a document.
@@ -168,7 +166,7 @@ class TranskribusRestApi:
              * document_id: document ID
             """
             return parse_xml(
-                self.api._get(f"collections/{collection_id}/{document_id}/mets").content
+                str(self.api._get(f"collections/{collection_id}/{document_id}/mets"))
             )
 
         def get_pages_from_pages_str(
@@ -178,7 +176,7 @@ class TranskribusRestApi:
             pages: str | None = None,
             status: str | None = None,
             skip_pages_with_missing_status: bool = False,
-        ) -> list:
+        ) -> JsonType:
             """Get pages in a document.
 
             Args:
@@ -195,7 +193,7 @@ class TranskribusRestApi:
                 params["status"] = status
             return self.api._get(
                 f"collections/{collection_id}/{document_id}/pages", params=params
-            ).json()
+            )
 
         def get_transcript(
             self, collection_id: int, document_id: int, page_nr: int
@@ -208,9 +206,11 @@ class TranskribusRestApi:
              * page_nr: page number
             """
             return parse_xml(
-                self.api._get(
-                    f"collections/{collection_id}/{document_id}/{page_nr}/text"
-                ).content
+                str(
+                    self.api._get(
+                        f"collections/{collection_id}/{document_id}/{page_nr}/text"
+                    )
+                )
             )
 
         def list(
@@ -223,7 +223,7 @@ class TranskribusRestApi:
             filter: str | None = None,
             role: str | None = None,
             user_id: int | None = None,
-        ) -> dict:
+        ) -> JsonType:
             """Get a list of collections.
 
             Args:
@@ -245,7 +245,7 @@ class TranskribusRestApi:
                     "role": role,
                     "userid": user_id,
                 },
-            ).json()
+            )
 
         def list_docs_by_collection_id(
             self,
@@ -255,7 +255,7 @@ class TranskribusRestApi:
             sort_column: str | None = None,
             sort_direction: str | None = None,
             is_deleted: bool = False,
-        ):
+        ) -> JsonType:
             """Get a list of documents in a collection.
 
             Args:
@@ -274,7 +274,7 @@ class TranskribusRestApi:
                     "sortDirection": sort_direction,
                     "isDeleted": is_deleted,
                 },
-            ).json()
+            )
 
     class Job:
         """Group all job requests together."""
@@ -300,7 +300,7 @@ class TranskribusRestApi:
             n_values: int = 50,
             sort_column: str | None = None,
             sort_direction: str | None = None,
-        ):
+        ) -> JsonType:
             """List jobs.
 
             Args:
@@ -331,15 +331,15 @@ class TranskribusRestApi:
                     "sortColumn": sort_column,
                     "sortDirection": sort_direction,
                 },
-            ).json()
+            )
 
-        def get_job_by_id(self, job_id: int | str) -> dict:
+        def get_job_by_id(self, job_id: int | str) -> JsonType:
             """Get a job by ID.
 
             Args:
              * job_id: job ID
             """
-            return self.api._get(f"jobs/{job_id}").json()
+            return self.api._get(f"jobs/{job_id}")
 
     class Uploads:
         """Group all uploads requests together."""
@@ -352,43 +352,39 @@ class TranskribusRestApi:
             """
             self.api = api
 
-        def create_upload_mets(self, collection_id: int, mets: str) -> etree._Element:
+        def create_upload_mets(self, collection_id: int, mets: str) -> JsonType:
             """Create a new upload from a mets file.
 
             Args:
              * collection_id: collection ID
              * mets: mets XML
             """
-            return parse_xml(
-                self.api._post(
-                    "uploads",
-                    params={"collId": collection_id},
-                    data={"mets": mets},
-                ).content
+            return self.api._post(
+                "uploads",
+                params={"collId": collection_id},
+                data={"mets": mets},
             )
 
         def create_upload_doc_structure(
-            self, collection_id: int, json: dict
-        ) -> etree._Element:
+            self, collection_id: int, json: JsonType
+        ) -> JsonType:
             """Create a new upload from JSON data.
 
             Args:
              * collection_id: collection ID
              * json: JSON data
             """
-            return parse_xml(
-                self.api._post(
-                    "uploads", params={"collId": collection_id}, json=json
-                ).content
+            return self.api._post(
+                "uploads", params={"collId": collection_id}, json=json
             )
 
-        def get_status(self, upload_id: int) -> dict:
+        def get_status(self, upload_id: int) -> JsonType:
             """Get status.
 
             Args:
              * upload_id
             """
-            return self.api._get(f"uploads/{upload_id}").json()
+            return self.api._get(f"uploads/{upload_id}")
 
         def upload_page(
             self,
@@ -420,49 +416,65 @@ class TranskribusRestApi:
         self.session_id = TranskribusRestApi.SessionId.login(username, password)
         self.uploads = TranskribusRestApi.Uploads(self)
 
-    def _delete(self, path: str, params: dict = {}) -> requests.models.Response:
+    def _delete(self, path: str, params: dict = {}) -> JsonType:
         r = requests.delete(
             f"{self.BASE_URL}/{path}",
-            headers=self.session_id.get_auth_header(),
+            headers={"Accept": "application/json, text/plain, */*"}
+            | self.session_id.get_auth_header(),
             params=params,
         )
         r.raise_for_status()
-        return r
+        return self._handle_response(r)
 
-    def _get(self, path: str, params: dict = {}) -> requests.models.Response:
+    def _get(self, path: str, params: dict = {}) -> JsonType:
         r = requests.get(
             f"{self.BASE_URL}/{path}",
-            headers=self.session_id.get_auth_header(),
+            headers={"Accept": "application/json, text/plain, */*"}
+            | self.session_id.get_auth_header(),
             params=params,
         )
         r.raise_for_status()
-        return r
+        return self._handle_response(r)
+
+    def _handle_response(self, response: requests.models.Response) -> JsonType:
+        content_type = response.headers.get("Content-Type", "")
+        media_type = content_type.partition(";")[0].strip().lower()
+
+        if media_type in {"application/json", "application/problem+json"}:
+            try:
+                return response.json()
+            except requests.exceptions.JSONDecodeError:
+                return response.text
+        else:
+            return response.text
 
     def _post(
         self,
         path: str,
         params: dict = {},
         data: dict = {},
-        json: dict = {},
-    ) -> requests.models.Response:
+        json: JsonType = None,
+    ) -> JsonType:
         r = requests.post(
             f"{self.BASE_URL}/{path}",
-            headers=self.session_id.get_auth_header(),
+            headers={"Accept": "application/json, text/plain, */*"}
+            | self.session_id.get_auth_header(),
             params=params,
             data=data,
             json=json,
         )
         r.raise_for_status()
-        return r
+        return self._handle_response(r)
 
-    def _put(self, path: str, files: dict[str, tuple]) -> requests.models.Response:
+    def _put(self, path: str, files: dict[str, tuple]) -> JsonType:
         r = requests.put(
             f"{self.BASE_URL}/{path}",
-            headers=self.session_id.get_auth_header(),
+            headers={"Accept": "application/json, text/plain, */*"}
+            | self.session_id.get_auth_header(),
             files=files,
         )
         r.raise_for_status()
-        return r
+        return self._handle_response(r)
 
     def close(self) -> bool:
         """Close this API.
@@ -489,7 +501,7 @@ class TranskribusRestApi:
          * pages: pages to upload
          * metadata: extra metadata for the document
         """
-        data = {
+        data: JsonType = {
             "md": {
                 "title": title,
             }
@@ -510,13 +522,40 @@ class TranskribusRestApi:
             },
         }
 
-        doc = self.uploads.create_upload_doc_structure(collection_id, data)
-        upload_id = int(doc.xpath("//uploadId/text()")[0])
+        data = self.uploads.create_upload_doc_structure(collection_id, data)
+        if (
+            isinstance(data, dict)
+            and "uploadId" in data
+            and (isinstance(data["uploadId"], str) or isinstance(data["uploadId"], int))
+        ):
+            upload_id = int(data["uploadId"])
+        else:
+            raise RuntimeError(
+                "Failed to get uploadId from upload_doc_structure endpoint."
+            )
 
         for page in pages:
             self.uploads.upload_page(upload_id, page.image, page.page_xml)
-        job_id = self.uploads.get_status(upload_id)["jobId"]
-        return self.job.get_job_by_id(job_id)["docId"]
+
+        data = self.uploads.get_status(upload_id)
+        if (
+            isinstance(data, dict)
+            and "jobId" in data
+            and (isinstance(data["jobId"], str) or isinstance(data["jobId"], int))
+        ):
+            job_id = int(data["jobId"])
+            self.job.get_job_by_id(job_id)
+            data = self.job.get_job_by_id(job_id)
+            if (
+                isinstance(data, dict)
+                and "docId" in data
+                and (isinstance(data["docId"], str) or isinstance(data["docId"], int))
+            ):
+                return int(data["docId"])
+            else:
+                raise RuntimeError("Failed to get docId from get_job_by_id endpoint.")
+        else:
+            raise RuntimeError("Failed to get jobId from get_status endpoint.")
 
     def download_document(
         self,
@@ -535,6 +574,12 @@ class TranskribusRestApi:
             target = Path(target)
         mets = self.collections.get_mets(collection_id, document_id)
         pages = self.collections.get_pages_from_pages_str(collection_id, document_id)
+        if not isinstance(pages, list):
+            raise RuntimeError(
+                "Failed to retrieve list of pages from get_pages_from_pages_str "
+                + "endpoint."
+            )
+
         for i, e in enumerate(
             mets.xpath(
                 '//ns3:fileGrp[@ID="PAGEXML"]//ns3:FLocat',
@@ -544,31 +589,61 @@ class TranskribusRestApi:
                 },
             )
         ):
-            e.attrib["LOCTYPE"] = "OTHER"
-            e.attrib["OTHERLOCTYPE"] = "FILE"
-            e.attrib["{http://www.w3.org/1999/xlink}href"] = pages[i]["tsList"][
-                "transcripts"
-            ][0]["fileName"]
+            page = pages[i]
+            if (
+                isinstance(page, dict)
+                and "tsList" in page
+                and isinstance(page["tsList"], dict)
+                and "transcripts" in page["tsList"]
+                and isinstance(page["tsList"]["transcripts"], list)
+                and isinstance(page["tsList"]["transcripts"][0], dict)
+                and "fileName" in page["tsList"]["transcripts"][0]
+                and isinstance(page["tsList"]["transcripts"][0]["fileName"], str)
+            ):
+                e.attrib["LOCTYPE"] = "OTHER"
+                e.attrib["OTHERLOCTYPE"] = "FILE"
+                e.attrib["{http://www.w3.org/1999/xlink}href"] = page["tsList"][
+                    "transcripts"
+                ][0]["fileName"]
+            else:
+                raise RuntimeError(
+                    f"Failed to retrieve fileName for page {i} in "
+                    + "get_pages_from_pages_str endpoint."
+                )
 
         etree.indent(mets, space=" " * 4)
         with open(target / "mets.xml", "wb") as f:
             f.write(etree.tostring(mets, xml_declaration=True, pretty_print=True))
 
         for page in pages:
-            doc = self.collections.get_transcript(
-                collection_id, document_id, page["pageNr"]
-            )
-            etree.indent(doc, space=" " * 4)
-            with open(target / page["tsList"]["transcripts"][0]["fileName"], "wb") as f:
-                f.write(
-                    etree.tostring(
-                        doc,
-                        encoding="utf-8",
-                        xml_declaration=True,
-                        pretty_print=True,
-                        standalone=True,
-                    )
+            if (
+                isinstance(page, dict)
+                and "pageNr" in page
+                and (isinstance(page["pageNr"], int) or isinstance(page["pageNr"], str))
+                and "tsList" in page
+                and isinstance(page["tsList"], dict)
+                and "transcripts" in page["tsList"]
+                and isinstance(page["tsList"]["transcripts"], list)
+                and isinstance(page["tsList"]["transcripts"][0], dict)
+                and "fileName" in page["tsList"]["transcripts"][0]
+                and isinstance(page["tsList"]["transcripts"][0]["fileName"], str)
+            ):
+                doc = self.collections.get_transcript(
+                    collection_id, document_id, int(page["pageNr"])
                 )
+                etree.indent(doc, space=" " * 4)
+                with open(
+                    target / page["tsList"]["transcripts"][0]["fileName"], "wb"
+                ) as f:
+                    f.write(
+                        etree.tostring(
+                            doc,
+                            encoding="utf-8",
+                            xml_declaration=True,
+                            pretty_print=True,
+                            standalone=True,
+                        )
+                    )
 
 
 @contextmanager
