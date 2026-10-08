@@ -22,6 +22,5 @@
 import sys
 import transkribus_rest_api.app
 
-
 if __name__ == "__main__":
     sys.exit(transkribus_rest_api.app.main())
