@@ -276,6 +276,23 @@ class TranskribusRestApi:
                 },
             )
 
+        def update_doc_md(
+            self, collection_id: int, document_id: int, metadata: JsonType
+        ) -> JsonType:
+            """Update the metadata of a document.
+
+            Best is to update the JSON-object retrieved by `get_doc_md_by_id`.
+
+            Args:
+             * collection_id: collection ID
+             * document_id: document ID
+             * metadata: the metadta to update
+            """
+            return self.api._post(
+                f"collections/{collection_id}/{document_id}/metadata",
+                json=metadata,
+            )
+
     class Job:
         """Group all job requests together."""
 
